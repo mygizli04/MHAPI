@@ -1,5 +1,6 @@
 import express from 'express';
 import * as account from './accounts';
+import * as users from './users';
 
 const app = express();
 
@@ -20,7 +21,17 @@ app.get('/usernamepassword', async (req, res) => {
         return;
     }
 
-    res.send(await account.check(req.headers.username, req.headers.password));
+    const check = await account.check(req.headers.username, req.headers.password)
+
+    if (check.success) {
+        res.send({
+            success: true,
+            user: users.accounts[req.headers.username]
+        })
+    }
+    else {
+        res.status(401).send(check)
+    }
     return;
 });
 
@@ -44,4 +55,6 @@ app.post('/create', async (req, res) => {
     return;
 });
 
-app.listen(80);
+app.listen(80, () => {
+    console.log("Listening on port 80!")
+});
