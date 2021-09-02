@@ -8,14 +8,14 @@ if (!process.env.KEY) {
     process.exit(1);
 }
 
-type Reason = "Invalid username." | "Invalid password." | null;
+type CheckReason = "Invalid username." | "Invalid password." | null;
 
 interface Result {
     success: boolean,
-    reason?: Reason;
+    reason?: CheckReason;
 }
 
-function checkResultToReason (checkReason: codepass.CheckResult): Reason {
+function checkResultToReason (checkReason: codepass.CheckResult): CheckReason {
     switch (checkReason) {
         case 'InvalidAccount':
             return "Invalid username.";
@@ -28,7 +28,21 @@ function checkResultToReason (checkReason: codepass.CheckResult): Reason {
 
 export async function check (username: string, password: string): Promise<Result> {
     return new Promise(async (resolve, reject) => {
-        const result = await codepass.check(process.env.KEY!, username, password);
+        let result: [boolean, codepass.CheckResult];
+        try {
+            result = await codepass.check(process.env.KEY!, username, password);
+        }
+        catch (err) {
+            if (err === "Invalid API Key.") {
+                reject({
+                    sucess: false,
+                    reason: err
+                })
+                return; 
+            }
+            reject(err);
+            return;
+        }
 
         if (result[0]) {
             resolve({ success: true });
@@ -41,5 +55,20 @@ export async function check (username: string, password: string): Promise<Result
             });
             return;
         }
+    });
+}
+
+export async function create (username: string, password: string): Promise<Result> {
+    return new Promise(async (resolve, reject) => {
+        try {
+            await codepass.create(process.env.KEY!, username, password)
+        }
+        catch (err) {
+            reject(err)
+        }
+
+        resolve({
+            success: true
+        });
     });
 }
