@@ -1,0 +1,3 @@
+[submodule "codepass"]
+	path = codepass
+	url = https://github.com/mygizli04/codepass.git
