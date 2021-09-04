@@ -1,8 +1,18 @@
 import fs from 'fs';
 import * as uuid from 'uuid';
+import * as MHAccount from './minehutAccount';
 
-interface User {
+export class User {
     token: string;
+
+    minehutAccounts: MHAccount.MinehutAccount[] = [];
+
+    constructor (token?: string, accounts?: MHAccount.MinehutAccount[]) {
+        this.token = token ?? uuid.v4();
+        if (accounts) {
+            this.minehutAccounts = accounts;
+        }
+    }
 }
 
 if (!fs.existsSync('./accounts.json')) {
@@ -22,7 +32,7 @@ export let accounts = new Proxy(JSON.parse(fs.readFileSync("./accounts.json").to
                 return user;
             }
             else {
-                return accounts[name] = { token: uuid.v4() };
+                return accounts[name] = { token: uuid.v4(), minehutAccounts: [] };
             }
         }
     },

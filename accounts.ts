@@ -64,7 +64,7 @@ export async function create (username: string, password: string): Promise<Resul
             await codepass.create(process.env.KEY!, username, password)
         }
         catch (err) {
-            reject(err)
+            return reject(err);
         }
 
         resolve({
