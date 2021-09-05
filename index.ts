@@ -1,10 +1,12 @@
 import express from 'express';
 import * as account from './accounts';
-import { MinehutAccount, minetronLogin } from './minehutAccount';
-import { CheckSuccessResponse, ErrorResponse } from './RequestInterfaces';
+import { MinehutAccount, minetronLogin, rawLogin } from './minehutAccount';
+import { checkLinkAccountRequest, checkMinetronLinkAccountRequest, checkRawLinkAccountRequest, CheckSuccessResponse, ErrorResponse } from './RequestInterfaces';
 import * as users from './users';
 import { objectForEach, objectIndexOf } from './Utils';
+import bodyParser from 'body-parser';
 
+const jsonParser = bodyParser.json();
 const app = express();
 
 function error(reason: string): ErrorResponse {
@@ -14,7 +16,7 @@ function error(reason: string): ErrorResponse {
     }
 }
 
-app.get('/usernamepassword', async (req, res) => {
+app.get('/usernamepassword', jsonParser, async (req, res) => {
 
     let errors = {
         invalidUsername: error("Invalid username."),
@@ -45,7 +47,7 @@ app.get('/usernamepassword', async (req, res) => {
     return;
 });
 
-app.post('/create', async (req, res) => {
+app.post('/create', jsonParser, async (req, res) => {
 
     let errors = {
         invalidUsername: error("Invalid username."),
@@ -65,48 +67,71 @@ app.post('/create', async (req, res) => {
     return;
 });
 
-app.post('/link', async (req, res) => {
+app.post('/link', jsonParser, async (req, res) => {
 
     let errors = {
         invalidMinetronToken: error("Invalid minetron token."),
-        invalidAuthorizationToken: error("Invalid authorization token.")
+        invalidAuthorizationToken: error("Invalid authorization token."),
+        invalidSyntax: error("Your request is malformed.")
+    }
+
+    if (!checkLinkAccountRequest(req.body)) {
+        res.status(500).send(errors.invalidSyntax)
+        return;
     }
 
     let user = verifyAuthorization(req.headers.authorization)
 
     if (user) {
-        if (typeof req.headers.token !== 'string') {
-            res.status(400).send(errors.invalidMinetronToken)
-            return;
-        }
-
         let account: MinehutAccount;
-        try {
-            account = await minetronLogin(req.headers.token)
-        }
-        catch (err) {
-            let reason: string
-
-            if (err === "Invalid UUID") {
-                reason = "Invalid minetron token."
+        if (checkMinetronLinkAccountRequest(req.body)) {
+            if (typeof req.body.token !== 'string') {
+                res.status(400).send(errors.invalidMinetronToken)
+                return;
             }
-            else {
-                if (typeof err === "string") {
-                    reason = err;
-                }
-                else if (typeof err === "object" && err !== null && err.toString && err.toString() !== "[object Object]") {
-                    reason = "An error occured while resolving minetron token: " + err.toString();
+
+            try {
+                account = await minetronLogin(req.body.token)
+            }
+            catch (err) {
+                let reason: string
+    
+                if (err === "Invalid UUID") {
+                    reason = "Invalid minetron token."
                 }
                 else {
-                    reason = "An unknown error occured while resolving minetron token."
+                    if (typeof err === "string") {
+                        reason = err;
+                    }
+                    else if (typeof err === "object" && err !== null && err.toString && err.toString() !== "[object Object]") {
+                        reason = "An error occured while resolving minetron token: " + err.toString();
+                    }
+                    else {
+                        reason = "An unknown error occured while resolving minetron token."
+                    }
                 }
+    
+                res.status(401).send({
+                    success: false,
+                    reason: reason
+                })
+                return;
             }
-
-            res.status(401).send({
-                success: false,
-                reason: reason
+        }
+        else if (checkRawLinkAccountRequest(req.body)) {
+            account = await rawLogin({
+                auth: {
+                    authorization: req.body.authDetails.authorization,
+                    slgSessionId: req.body.authDetails.slgSessionId,
+                    xSessionId: req.body.authDetails.xSessionId,
+                    xSlgUser: req.body.authDetails.xSlgUser
+                },
+                id: req.body.authDetails.userId,
+                servers: []
             })
-            return;
+        }
+        else {
+            return res.status(400).send(errors.invalidSyntax)
         }
         user.minehutAccounts.push(account);
 

@@ -11,6 +11,17 @@ export async function minetronLogin (token: string): Promise<MinehutAccount> {
     });
 }
 
+export async function rawLogin(account: MinehutAccount): Promise<MinehutAccount> {
+    return new MinehutAccount(minehut._altLogin({
+        userId: account.id,
+        servers: [],
+        authorization: account.auth.authorization,
+        slgSessionId: account.auth.slgSessionId,
+        xSessionId: account.auth.xSessionId,
+        xSlgUser: account.auth.xSlgUser
+    }));
+}
+
 export class MinehutAccount {
     id: string;
     servers: string[];
