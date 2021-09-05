@@ -103,6 +103,6 @@ dist
 # TernJS port file
 .tern-port
 
-out/
-accounts.json
-.vscode/
+/out/
+/accounts.json
+/.vscode/
