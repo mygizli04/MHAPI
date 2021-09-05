@@ -1,35 +1,43 @@
 import express from 'express';
 import * as account from './accounts';
 import { MinehutAccount, minetronLogin } from './minehutAccount';
+import { CheckSuccessResponse, ErrorResponse } from './RequestInterfaces';
 import * as users from './users';
 import { objectForEach, objectIndexOf } from './Utils';
 
 const app = express();
 
+function error(reason: string): ErrorResponse {
+    return {
+        success: false,
+        reason: reason
+    }
+}
+
 app.get('/usernamepassword', async (req, res) => {
 
-    if (!req.headers.username || Array.isArray(req.headers.username)) {
-        res.status(400).send(JSON.stringify({
-            success: false,
-            reason: "Invalid username."
-        }));
+    let errors = {
+        invalidUsername: error("Invalid username."),
+        invalidPassword: error("Invalid password.")
+    }
+
+    if (typeof req.headers.username !== "string") {
+        res.status(400).send(errors.invalidUsername);
         return;
     }
-    else if (!req.headers.password || Array.isArray(req.headers.password)) {
-        res.status(400).send(JSON.stringify({
-            success: false,
-            reason: "Invalid password."
-        }));
+    else if (typeof req.headers.password !== "string") {
+        res.status(400).send(errors.invalidPassword);
         return;
     }
 
     const check = await account.check(req.headers.username, req.headers.password)
 
     if (check.success) {
-        res.send({
+        let response: CheckSuccessResponse = {
             success: true,
             user: users.accounts[req.headers.username]
-        })
+        }
+        res.send(response);
     }
     else {
         res.status(401).send(check)
@@ -38,18 +46,18 @@ app.get('/usernamepassword', async (req, res) => {
 });
 
 app.post('/create', async (req, res) => {
+
+    let errors = {
+        invalidUsername: error("Invalid username."),
+        invalidPassword: error("Invalid password.")
+    }
+
     if (!req.headers.username || Array.isArray(req.headers.username)) {
-        res.status(400).send(JSON.stringify({
-            success: false,
-            reason: "Invalid username."
-        }));
+        res.status(400).send(errors.invalidUsername);
         return;
     }
     else if (!req.headers.password || Array.isArray(req.headers.password)) {
-        res.status(400).send(JSON.stringify({
-            success: false,
-            reason: "Invalid password."
-        }));
+        res.status(400).send(errors.invalidPassword);
         return;
     }
 
@@ -57,15 +65,18 @@ app.post('/create', async (req, res) => {
     return;
 });
 
-app.post('/link/minetron', async (req, res) => {
+app.post('/link', async (req, res) => {
+
+    let errors = {
+        invalidMinetronToken: error("Invalid minetron token."),
+        invalidAuthorizationToken: error("Invalid authorization token.")
+    }
+
     let user = verifyAuthorization(req.headers.authorization)
 
     if (user) {
         if (typeof req.headers.token !== 'string') {
-            res.status(400).send({
-                success: false,
-                reason: "Invalid minetron token."
-            })
+            res.status(400).send(errors.invalidMinetronToken)
             return;
         }
 
@@ -100,16 +111,15 @@ app.post('/link/minetron', async (req, res) => {
         user.minehutAccounts.push(account);
 
         users.accounts[objectIndexOf(users.accounts, user)!] = user;
-        res.send({
+        
+        let response: CheckSuccessResponse = {
             success: true,
             user: user
-        })
+        }
+        res.send(response);
     }
     else {
-        res.status(401).send({
-            success: false,
-            reason: "Invalid authorization token."
-        })
+        res.status(401).send(errors.invalidAuthorizationToken)
     }
 })
 
