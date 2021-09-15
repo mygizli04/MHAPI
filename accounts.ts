@@ -1,5 +1,5 @@
-import * as codepass from './codepass/index';
-import dotenv from 'dotenv';
+import * as codepass from './codepass/index'; // Initilize the CodePass API
+import dotenv from 'dotenv'; // Load secrets from .env file
 
 dotenv.config();
 
@@ -26,6 +26,14 @@ function checkResultToReason (checkReason: codepass.CheckResult): CheckReason {
     }
 }
 
+/**
+ * Check if a CodePass username/info is valid
+ * 
+ * @async
+ * @param username
+ * @param password
+ * @returns Result
+ */
 export async function check (username: string, password: string): Promise<Result> {
     return new Promise(async (resolve, reject) => {
         let result: [boolean, codepass.CheckResult];
@@ -58,6 +66,14 @@ export async function check (username: string, password: string): Promise<Result
     });
 }
 
+/**
+ * Create a new CodePass account
+ * 
+ * @async
+ * @param username 
+ * @param password 
+ * @returns Result
+ */
 export async function create (username: string, password: string): Promise<Result> {
     return new Promise(async (resolve, reject) => {
         try {

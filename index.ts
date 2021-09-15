@@ -1,15 +1,21 @@
-import express from 'express';
-import * as account from './accounts';
-import { MinehutAccount, minetronLogin, rawLogin } from './minehutAccount';
-import { checkLinkAccountRequest, checkMinetronLinkAccountRequest, checkRawLinkAccountRequest, CheckSuccessResponse, ErrorResponse } from './RequestInterfaces';
-import * as users from './users';
-import { objectForEach, objectIndexOf, asyncArrayFilter } from './Utils';
-import bodyParser from 'body-parser';
-import { checkAccount } from './minehutFunctions';
+import express from 'express'; // Implement the API
+import bodyParser from 'body-parser'; // JSON parsing for Express
+import * as account from './accounts'; // Implement CodePass accounts 
+import { MinehutAccount, minetronLogin, rawLogin } from './minehutAccount'; // Implement logging into MineHut
+import { checkLinkAccountRequest, checkMinetronLinkAccountRequest, checkRawLinkAccountRequest, CheckSuccessResponse, ErrorResponse } from './RequestInterfaces'; // Type all responses this API can send.
+import * as users from './users'; // Implement local users
+import { objectForEach, objectIndexOf, asyncArrayFilter } from './Utils'; // Various utilities
+import { checkAccount } from './minehutFunctions'; // Functions related to using the minehut API
 
 const jsonParser = bodyParser.json();
 const app = express();
 
+/**
+ * Generate an error message.
+ * 
+ * @param reason The reason for this error.
+ * @returns ErrorResponse
+ */
 function error (reason: string): ErrorResponse {
     return {
         success: false,
@@ -17,6 +23,9 @@ function error (reason: string): ErrorResponse {
     };
 }
 
+/**
+ * Authenticate the user with their CodePass username/password
+ */
 app.get('/usernamepassword', async (req, res) => {
 
     let errors = {
@@ -48,6 +57,9 @@ app.get('/usernamepassword', async (req, res) => {
     return;
 });
 
+/**
+ * Create a new account
+ */
 app.post('/create', async (req, res) => {
 
     let errors = {
@@ -68,6 +80,9 @@ app.post('/create', async (req, res) => {
     return;
 });
 
+/**
+ * Link a minehut account with a local account
+ */
 app.post('/link', jsonParser, async (req, res) => {
 
     let errors = {
@@ -149,6 +164,13 @@ app.post('/link', jsonParser, async (req, res) => {
     }
 });
 
+/**
+ * Validate authorization tokens
+ * 
+ * @param header The header entry that contains the authorization token
+ * 
+ * @returns null | Users.User
+ */
 function verifyAuthorization (header: string | string[] | undefined): null | users.User {
     if (!header || Array.isArray(header)) {
         return null;
@@ -163,6 +185,9 @@ function verifyAuthorization (header: string | string[] | undefined): null | use
     return ret;
 }
 
+/**
+ * Verify all minehut accounts linked to a local account
+ */
 app.post('/verifyAccounts', async (req, res) => {
     let user = verifyAuthorization(req.headers.authorization);
 
@@ -182,6 +207,9 @@ app.post('/verifyAccounts', async (req, res) => {
     res.send(result);
 });
 
+/**
+ * Get user information
+ */
 app.get('/accountInfo', async (req, res) => {
     let user = verifyAuthorization(req.headers.authorization);
 

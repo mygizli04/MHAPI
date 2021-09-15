@@ -19,6 +19,26 @@ if (!fs.existsSync('./accounts.json')) {
     fs.writeFileSync('./accounts.json', "{}");
 }
 
+/**
+ * The object that contains all accounts.
+ * 
+ * Warning: This object is a proxy that handles caching, reading and writing of accounts.json. You should not write to accounts.json manually.
+ * 
+ * Assume this object is always up to date.
+ * 
+ * Warning: Make sure to assign directly to this object's properties in order for them to get picked up by the proxy.
+ * 
+ * @example
+ * ```javascript
+ * // What NOT to do
+ * accounts["user"].minehutAccounts.push(account);
+ * 
+ * // What to ACTUALLY do
+ * let user = accounts["user"]
+ * user.minehutAccounts.push(account);
+ * accounts["user"] = user;
+ * ```
+ */
 export let accounts = new Proxy(JSON.parse(fs.readFileSync("./accounts.json").toString()) as { [key: string]: User; }, {
     get (target, name) {
         if (typeof name === "symbol") throw "What the heck are symbols";

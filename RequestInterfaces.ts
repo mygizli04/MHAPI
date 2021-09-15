@@ -1,18 +1,30 @@
 import { User } from "./users";
 import { checkProperty } from "./Utils";
 
+/**
+ * The response to send when something goes wrong.
+ */
 export interface ErrorResponse {
     success: false,
     reason: string;
 }
 
+/**
+ * The response to send when a check operation is a success
+ */
 export interface CheckSuccessResponse {
     success: true,
     user: User;
 }
 
+/**
+ * All types a request for linking an account can be
+ */
 export type LinkAccountRequest = MinetronLinkAccountRequest | RawLinkAccountRequest;
 
+/**
+ * The request when we don't know what type it is yet.
+ */
 export interface UnknownLinkAccountRequest {
     type: "minetron" | "raw",
     token?: string;
@@ -25,6 +37,11 @@ export interface UnknownLinkAccountRequest {
     };
 }
 
+/**
+ * Check if a given object is a UnknownLinkAccountRequest
+ * 
+ * @param obj Unknown object
+ */
 export function checkLinkAccountRequest (obj: UnknownLinkAccountRequest): obj is UnknownLinkAccountRequest {
     return checkProperty(obj as {}, "type", "string", ["minetron", "raw"]);
 }
@@ -34,6 +51,11 @@ export interface MinetronLinkAccountRequest {
     token: string;
 }
 
+/**
+ * Check if an UnknownLinkAccountRequest is a MinetronLinkAccountRequest
+ * 
+ * @param obj UnknownLinkAccountRequest
+ */
 export function checkMinetronLinkAccountRequest (obj: UnknownLinkAccountRequest): obj is MinetronLinkAccountRequest {
     let type = checkProperty(obj as {}, "type", "string", "minetron");
     let token = checkProperty(obj as { token: string; }, "token", "string", "", obj => obj.token.length === 36);
@@ -51,6 +73,11 @@ export interface RawLinkAccountRequest {
     };
 }
 
+/**
+ * Check if an UnknownLinkAccountRequest is a RawLinkAccountRequest
+ * 
+ * @param obj UnknownLinkAccountRequest
+ */
 export function checkRawLinkAccountRequest (obj: UnknownLinkAccountRequest): obj is RawLinkAccountRequest {
 
     if (!checkLinkAccountRequest(obj)) {

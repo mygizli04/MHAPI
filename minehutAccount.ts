@@ -1,4 +1,4 @@
-import * as minehut from 'minehut-ts';
+import * as minehut from 'minehut-ts'; // Login to minehut
 
 export async function minetronLogin (token: string): Promise<MinehutAccount> {
     return new Promise(async (resolve, reject) => {
@@ -11,6 +11,13 @@ export async function minetronLogin (token: string): Promise<MinehutAccount> {
     });
 }
 
+/**
+ * Login by token information
+ * 
+ * @async
+ * @param account 
+ * @returns MinehutAccount
+ */
 export async function rawLogin(account: MinehutAccount): Promise<MinehutAccount> {
     return new MinehutAccount(minehut._altLogin({
         userId: account.id,
