@@ -182,6 +182,22 @@ app.post('/verifyAccounts', async (req, res) => {
     res.send(result);
 });
 
+app.get('/accountInfo', async (req, res) => {
+    let user = verifyAuthorization(req.headers.authorization);
+
+    if (!user) {
+        res.status(401).send("Your account could not be found.");
+        return;
+    }
+
+    let result: CheckSuccessResponse = {
+        success: true,
+        user: users.accounts[objectIndexOf(users.accounts, user)!]
+    };
+
+    res.send(result);
+});
+
 app.listen(80, () => {
     console.log("Listening on port 80!");
 });
