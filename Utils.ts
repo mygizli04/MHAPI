@@ -1,3 +1,6 @@
+import { LoginInfo } from "minehut-ts";
+import { MinehutAccount } from "./minehutAccount";
+
 export function objectForEach<Type>(obj: {[key: string]: Type}, callback: (obj: {[key: string]: Type}, value: Type, index: string) => any) {
     Object.entries(obj).forEach(entry => {
         callback(obj, entry[1], entry[0])
@@ -40,4 +43,25 @@ export function checkProperty<Value, Obj extends {[key: string]: Value}>(obj: Ob
     }
     
     return typeof obj[prop] === type && valueCheck && (check ? check(obj) : true)
+}
+
+export function minehutAccountToLoginInfo(account: MinehutAccount): LoginInfo {
+    return {
+        authorization: account.auth.authorization,
+        servers: [],
+        slgSessionId: account.auth.slgSessionId,
+        userId: account.id,
+        xSessionId: account.auth.xSessionId,
+        xSlgUser: account.auth.xSessionId
+    }
+}
+
+export async function asyncArrayFilter<T>(array: T[], callback: (value: T, index: number, array: T[]) => Promise<boolean>): Promise<T[]> {
+    let ret: T[] = []
+    array.forEach(async (element, index, array) => {
+        if (await callback(element, index, array)) {
+            ret.push(element)
+        }
+    })
+    return ret
 }

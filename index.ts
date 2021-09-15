@@ -3,8 +3,9 @@ import * as account from './accounts';
 import { MinehutAccount, minetronLogin, rawLogin } from './minehutAccount';
 import { checkLinkAccountRequest, checkMinetronLinkAccountRequest, checkRawLinkAccountRequest, CheckSuccessResponse, ErrorResponse } from './RequestInterfaces';
 import * as users from './users';
-import { objectForEach, objectIndexOf } from './Utils';
+import { objectForEach, objectIndexOf, asyncArrayFilter } from './Utils';
 import bodyParser from 'body-parser';
+import { checkAccount } from './minehutFunctions';
 
 const jsonParser = bodyParser.json();
 const app = express();
@@ -16,7 +17,7 @@ function error(reason: string): ErrorResponse {
     }
 }
 
-app.get('/usernamepassword', jsonParser, async (req, res) => {
+app.get('/usernamepassword', async (req, res) => {
 
     let errors = {
         invalidUsername: error("Invalid username."),
@@ -47,7 +48,7 @@ app.get('/usernamepassword', jsonParser, async (req, res) => {
     return;
 });
 
-app.post('/create', jsonParser, async (req, res) => {
+app.post('/create', async (req, res) => {
 
     let errors = {
         invalidUsername: error("Invalid username."),
@@ -161,6 +162,25 @@ function verifyAuthorization(header: string | string[] | undefined): null | user
     })
     return ret
 }
+
+app.post('/verifyAccounts', async (req, res) => {
+    let user = verifyAuthorization(req.headers.authorization);
+
+    if (!user) {
+        res.status(401).send("Your account could not be found.");
+        return;
+    }
+
+    user.minehutAccounts = await asyncArrayFilter(user.minehutAccounts, checkAccount)
+    users.accounts[objectIndexOf(users.accounts, user)!] = user
+
+    let result: CheckSuccessResponse = {
+        success: true,
+        user: users.accounts[objectIndexOf(users.accounts, user)!]
+    }
+
+    res.send(result)
+})
 
 app.listen(80, () => {
     console.log("Listening on port 80!")
