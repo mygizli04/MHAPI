@@ -3,41 +3,41 @@ import { checkProperty } from "./Utils";
 
 export interface ErrorResponse {
     success: false,
-    reason: string
+    reason: string;
 }
 
 export interface CheckSuccessResponse {
     success: true,
-    user: User
+    user: User;
 }
 
-export type LinkAccountRequest = MinetronLinkAccountRequest | RawLinkAccountRequest
+export type LinkAccountRequest = MinetronLinkAccountRequest | RawLinkAccountRequest;
 
 export interface UnknownLinkAccountRequest {
     type: "minetron" | "raw",
-    token?: string
+    token?: string;
     authDetails?: {
         authorization: string,
         xSessionId: string,
         slgSessionId: string,
         xSlgUser: string,
-        userId: string
-    }
+        userId: string;
+    };
 }
 
-export function checkLinkAccountRequest(obj: UnknownLinkAccountRequest): obj is UnknownLinkAccountRequest {
+export function checkLinkAccountRequest (obj: UnknownLinkAccountRequest): obj is UnknownLinkAccountRequest {
     return checkProperty(obj as {}, "type", "string", ["minetron", "raw"]);
 }
 
 export interface MinetronLinkAccountRequest {
     type: "minetron",
-    token: string
+    token: string;
 }
 
-export function checkMinetronLinkAccountRequest(obj: UnknownLinkAccountRequest): obj is MinetronLinkAccountRequest {
-    let type = checkProperty(obj as {}, "type", "string", "minetron")
-    let token = checkProperty(obj as {token: string}, "token", "string", "", obj => obj.token.length === 36)
-    return type && token
+export function checkMinetronLinkAccountRequest (obj: UnknownLinkAccountRequest): obj is MinetronLinkAccountRequest {
+    let type = checkProperty(obj as {}, "type", "string", "minetron");
+    let token = checkProperty(obj as { token: string; }, "token", "string", "", obj => obj.token.length === 36);
+    return type && token;
 }
 
 export interface RawLinkAccountRequest {
@@ -47,27 +47,27 @@ export interface RawLinkAccountRequest {
         xSessionId: string,
         slgSessionId: string,
         xSlgUser: string,
-        userId: string
-    }
+        userId: string;
+    };
 }
 
-export function checkRawLinkAccountRequest(obj: UnknownLinkAccountRequest): obj is RawLinkAccountRequest {
+export function checkRawLinkAccountRequest (obj: UnknownLinkAccountRequest): obj is RawLinkAccountRequest {
 
     if (!checkLinkAccountRequest(obj)) {
         return false;
     }
 
-    let type = checkProperty(obj as {}, "type", "string", "raw")
-    
-    let authorization = checkProperty(obj.authDetails!, "authorization", "string")
-    let xSessionId = checkProperty(obj.authDetails!, "xSessionId", "string")
-    let slgSessionId = checkProperty(obj.authDetails!, "slgSessionId", "string")
-    let xSlgUser = checkProperty(obj.authDetails!, "xSlgUser", "string")
-    let userId = checkProperty(obj.authDetails!, "userId", "string")
+    let type = checkProperty(obj as {}, "type", "string", "raw");
 
-    let authDetails = authorization && xSessionId && slgSessionId && xSlgUser && userId
+    let authorization = checkProperty(obj.authDetails!, "authorization", "string");
+    let xSessionId = checkProperty(obj.authDetails!, "xSessionId", "string");
+    let slgSessionId = checkProperty(obj.authDetails!, "slgSessionId", "string");
+    let xSlgUser = checkProperty(obj.authDetails!, "xSlgUser", "string");
+    let userId = checkProperty(obj.authDetails!, "userId", "string");
 
-    return type && authDetails
+    let authDetails = authorization && xSessionId && slgSessionId && xSlgUser && userId;
+
+    return type && authDetails;
 }
 
 enum AuthType {
@@ -75,25 +75,25 @@ enum AuthType {
     MINETRON
 }
 
-export function determineAuthType(obj: UnknownLinkAccountRequest): AuthType {
+export function determineAuthType (obj: UnknownLinkAccountRequest): AuthType {
     if (!checkLinkAccountRequest(obj)) {
-        throw "Invalid arguments."
+        throw "Invalid arguments.";
     }
 
-    let minetron = checkMinetronLinkAccountRequest(obj)
-    let raw = checkRawLinkAccountRequest(obj)
+    let minetron = checkMinetronLinkAccountRequest(obj);
+    let raw = checkRawLinkAccountRequest(obj);
 
     if (minetron && raw) {
-        throw "Too many arguments."
+        throw "Too many arguments.";
     }
 
     if (minetron) {
-        return AuthType.MINETRON
+        return AuthType.MINETRON;
     }
     else if (raw) {
-        return AuthType.RAW
+        return AuthType.RAW;
     }
     else {
-        throw "Not enough arguments."
+        throw "Not enough arguments.";
     }
 }

@@ -10,11 +10,11 @@ import { checkAccount } from './minehutFunctions';
 const jsonParser = bodyParser.json();
 const app = express();
 
-function error(reason: string): ErrorResponse {
+function error (reason: string): ErrorResponse {
     return {
         success: false,
         reason: reason
-    }
+    };
 }
 
 app.get('/usernamepassword', async (req, res) => {
@@ -22,7 +22,7 @@ app.get('/usernamepassword', async (req, res) => {
     let errors = {
         invalidUsername: error("Invalid username."),
         invalidPassword: error("Invalid password.")
-    }
+    };
 
     if (typeof req.headers.username !== "string") {
         res.status(400).send(errors.invalidUsername);
@@ -33,17 +33,17 @@ app.get('/usernamepassword', async (req, res) => {
         return;
     }
 
-    const check = await account.check(req.headers.username, req.headers.password)
+    const check = await account.check(req.headers.username, req.headers.password);
 
     if (check.success) {
         let response: CheckSuccessResponse = {
             success: true,
             user: users.accounts[req.headers.username]
-        }
+        };
         res.send(response);
     }
     else {
-        res.status(401).send(check)
+        res.status(401).send(check);
     }
     return;
 });
@@ -53,7 +53,7 @@ app.post('/create', async (req, res) => {
     let errors = {
         invalidUsername: error("Invalid username."),
         invalidPassword: error("Invalid password.")
-    }
+    };
 
     if (!req.headers.username || Array.isArray(req.headers.username)) {
         res.status(400).send(errors.invalidUsername);
@@ -74,31 +74,31 @@ app.post('/link', jsonParser, async (req, res) => {
         invalidMinetronToken: error("Invalid minetron token."),
         invalidAuthorizationToken: error("Invalid authorization token."),
         invalidSyntax: error("Your request is malformed.")
-    }
+    };
 
     if (!checkLinkAccountRequest(req.body)) {
-        res.status(500).send(errors.invalidSyntax)
+        res.status(500).send(errors.invalidSyntax);
         return;
     }
 
-    let user = verifyAuthorization(req.headers.authorization)
+    let user = verifyAuthorization(req.headers.authorization);
 
     if (user) {
         let account: MinehutAccount;
         if (checkMinetronLinkAccountRequest(req.body)) {
             if (typeof req.body.token !== 'string') {
-                res.status(400).send(errors.invalidMinetronToken)
+                res.status(400).send(errors.invalidMinetronToken);
                 return;
             }
 
             try {
-                account = await minetronLogin(req.body.token)
+                account = await minetronLogin(req.body.token);
             }
             catch (err) {
-                let reason: string
-    
+                let reason: string;
+
                 if (err === "Invalid UUID") {
-                    reason = "Invalid minetron token."
+                    reason = "Invalid minetron token.";
                 }
                 else {
                     if (typeof err === "string") {
@@ -108,14 +108,14 @@ app.post('/link', jsonParser, async (req, res) => {
                         reason = "An error occured while resolving minetron token: " + err.toString();
                     }
                     else {
-                        reason = "An unknown error occured while resolving minetron token."
+                        reason = "An unknown error occured while resolving minetron token.";
                     }
                 }
-    
+
                 res.status(401).send({
                     success: false,
                     reason: reason
-                })
+                });
                 return;
             }
         }
@@ -129,27 +129,27 @@ app.post('/link', jsonParser, async (req, res) => {
                 },
                 id: req.body.authDetails.userId,
                 servers: []
-            })
+            });
         }
         else {
-            return res.status(400).send(errors.invalidSyntax)
+            return res.status(400).send(errors.invalidSyntax);
         }
         user.minehutAccounts.push(account);
 
         users.accounts[objectIndexOf(users.accounts, user)!] = user;
-        
+
         let response: CheckSuccessResponse = {
             success: true,
             user: user
-        }
+        };
         res.send(response);
     }
     else {
-        res.status(401).send(errors.invalidAuthorizationToken)
+        res.status(401).send(errors.invalidAuthorizationToken);
     }
-})
+});
 
-function verifyAuthorization(header: string | string[] | undefined): null | users.User {
+function verifyAuthorization (header: string | string[] | undefined): null | users.User {
     if (!header || Array.isArray(header)) {
         return null;
     }
@@ -157,10 +157,10 @@ function verifyAuthorization(header: string | string[] | undefined): null | user
     let ret: null | users.User = null;
     objectForEach(users.accounts, (obj, user) => {
         if (user.token === header) {
-            ret = user
+            ret = user;
         }
-    })
-    return ret
+    });
+    return ret;
 }
 
 app.post('/verifyAccounts', async (req, res) => {
@@ -171,17 +171,17 @@ app.post('/verifyAccounts', async (req, res) => {
         return;
     }
 
-    user.minehutAccounts = await asyncArrayFilter(user.minehutAccounts, checkAccount)
-    users.accounts[objectIndexOf(users.accounts, user)!] = user
+    user.minehutAccounts = await asyncArrayFilter(user.minehutAccounts, checkAccount);
+    users.accounts[objectIndexOf(users.accounts, user)!] = user;
 
     let result: CheckSuccessResponse = {
         success: true,
         user: users.accounts[objectIndexOf(users.accounts, user)!]
-    }
+    };
 
-    res.send(result)
-})
+    res.send(result);
+});
 
 app.listen(80, () => {
-    console.log("Listening on port 80!")
+    console.log("Listening on port 80!");
 });
